@@ -23,10 +23,6 @@ jobs:
       # 2. 设置Docker Buildx（增强推送稳定性，支持分片传输）
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-        with:
-          driver-opts: |
-            network=host # 解决网络连接问题
-          install: true
 
       # 3. 登录Docker Hub（使用Action Secrets存储凭证）
       - name: Login to Docker Hub
