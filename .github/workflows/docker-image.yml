@@ -1,18 +1,71 @@
-name: Docker Image CI
+name: Docker Image CI/CD
 
+# 触发条件：main分支推送/PR，或手动触发
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+  workflow_dispatch: # 允许手动触发
 
 jobs:
-
-  build:
-
+  build-and-push:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # 授予包推送权限
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag jule/playwright:$(date +%s)
+      # 1. 检出代码
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. 设置Docker Buildx（增强推送稳定性，支持分片传输）
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          driver-opts: |
+            network=host # 解决网络连接问题
+          install: true
+
+      # 3. 登录Docker Hub（使用Action Secrets存储凭证）
+      - name: Login to Docker Hub
+        if: github.event_name != 'pull_request' # PR时不登录（避免推送）
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+
+      # 4. 生成镜像标签（规范化版本管理）
+      - name: Generate image tags
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: jule/playwright
+          tags: |
+            type=sha,format=short # 提交哈希短标签
+            type=timestamp,format=unix # 时间戳标签
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }} # main分支打latest标签
+
+      # 5. 构建并推送镜像（使用buildx提升稳定性）
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }} # PR时仅构建不推送
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha # 使用GitHub缓存加速构建
+          cache-to: type=gha,mode=max # 缓存构建层
+          # 关键配置：解决推送连接中断
+          max-parallelism: 1 # 单线程推送（减少连接数）
+          retries: 3 # 失败自动重试3次
+          timeout: 1200s # 延长超时时间
+          platform: linux/amd64 # 仅构建amd64（减少体积）
+
+      # 6. 清理资源（可选）
+      - name: Clean up
+        if: always()
+        run: |
+          docker system prune -f
+          rm -rf ~/.docker/config.json
