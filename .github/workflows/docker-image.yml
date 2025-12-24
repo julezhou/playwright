@@ -46,12 +46,12 @@ jobs:
         id: gen_tags
         run: |
           # 生成时间戳标签（和你原始需求一致：date +%s）
-          TIMESTAMP_TAG=jule/playwright:$(date +%s)
+          TIMESTAMP_TAG=julezhou/playwright:$(date +%s)
           # 生成提交哈希短标签
-          SHA_TAG=jule/playwright:sha-$(git rev-parse --short HEAD)
+          SHA_TAG=julezhou/playwright:sha-$(git rev-parse --short HEAD)
           # main分支额外打latest标签
           if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            LATEST_TAG=jule/playwright:latest
+            LATEST_TAG=julezhou/playwright:latest
             TAGS="$TIMESTAMP_TAG,$SHA_TAG,$LATEST_TAG"
           else
             TAGS="$TIMESTAMP_TAG,$SHA_TAG"
