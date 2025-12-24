@@ -36,17 +36,22 @@ jobs:
 
       # 4. 生成镜像标签（规范化版本管理）
       - name: Generate image tags
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: jule/playwright
-          tags: |
-            # 提交哈希短标签（不变）
-            type=sha,format=short
-            # 替代timestamp：用date类型+unix格式（生成时间戳）
-            type=date,format=unix
-            # main分支打latest标签（不变）
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+        id: gen_tags
+        run: |
+          # 生成时间戳标签（和你原始需求一致：date +%s）
+          TIMESTAMP_TAG=jule/playwright:$(date +%s)
+          # 生成提交哈希短标签
+          SHA_TAG=jule/playwright:sha-$(git rev-parse --short HEAD)
+          # main分支额外打latest标签
+          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            LATEST_TAG=jule/playwright:latest
+            TAGS="$TIMESTAMP_TAG,$SHA_TAG,$LATEST_TAG"
+          else
+            TAGS="$TIMESTAMP_TAG,$SHA_TAG"
+          fi
+          # 输出标签到step输出（供后续使用）
+          echo "tags=$TAGS" >> $GITHUB_OUTPUT
+          echo "Generated tags: $TAGS"
 
       # 5. 构建并推送镜像（使用buildx提升稳定性）
       - name: Build and push Docker image
@@ -55,7 +60,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }} # PR时仅构建不推送
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ steps.gen_tags.outputs.tags }}
           cache-from: type=gha # 使用GitHub缓存加速构建
           cache-to: type=gha,mode=max # 缓存构建层
           # 关键配置：解决推送连接中断
