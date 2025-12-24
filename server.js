@@ -120,7 +120,7 @@ app.post("/render/png", async (req, res) => {
 		});
         const image = await page.screenshot({ 
 			fullPage: true,
-			quality: 100
+            type: 'png'
 		});
 		console.log("PNG生成成功");
 
