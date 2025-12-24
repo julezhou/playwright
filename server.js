@@ -60,6 +60,7 @@ function releaseWorker(worker) {
  */
 app.post("/render/pdf", async (req, res) => {
     const html = req.body;
+	console.log("开始生成PDF");
     if (!html) {
         return res.status(400).send("HTML content required");
     }
@@ -69,6 +70,7 @@ app.post("/render/pdf", async (req, res) => {
     const page = await context.newPage();
 
     try {
+		console.log("PDF生成中");
         await page.setContent(html, { 
 			waitUntil: "networkidle", 
 			timeout: 3000 
@@ -79,6 +81,7 @@ app.post("/render/pdf", async (req, res) => {
 			displayHeaderFooter: false,
 			timeout: 6000
 		});
+		console.log("PDF生成成功");
 
         res.setHeader("Content-Type", "application/pdf");
         res.setHeader("Content-Disposition", "inline; filename=result.pdf");
@@ -98,6 +101,7 @@ app.post("/render/pdf", async (req, res) => {
  */
 app.post("/render/png", async (req, res) => {
     const html = req.body;
+	console.log("开始生成PNG");
     if (!html) {
         return res.status(400).send("HTML content required");
     }
@@ -109,6 +113,7 @@ app.post("/render/png", async (req, res) => {
     const page = await context.newPage();
 
     try {
+		console.log("PNG生成中");
         await page.setContent(html, { 
 			waitUntil: "networkidle",
 			timeout: 3000
@@ -117,6 +122,7 @@ app.post("/render/png", async (req, res) => {
 			fullPage: true,
 			quality: 100
 		});
+		console.log("PNG生成成功");
 
         res.setHeader("Content-Type", "image/png");
         res.send(image);
