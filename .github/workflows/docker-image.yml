@@ -39,9 +39,12 @@ jobs:
         with:
           images: jule/playwright
           tags: |
-            type=sha,format=short # 提交哈希短标签
-            type=timestamp,format=unix # 时间戳标签
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }} # main分支打latest标签
+            # 提交哈希短标签（不变）
+            type=sha,format=short
+            # 替代timestamp：用date类型+unix格式（生成时间戳）
+            type=date,format=unix
+            # main分支打latest标签（不变）
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       # 5. 构建并推送镜像（使用buildx提升稳定性）
       - name: Build and push Docker image
