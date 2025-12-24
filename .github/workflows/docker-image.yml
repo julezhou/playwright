@@ -33,6 +33,13 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: 校验登录Docker Hub
+        run: |
+          # 验证登录是否成功
+          docker info | grep "Username"
+          # 列出有权限的仓库（验证权限）
+          curl -s -H "Authorization: Bearer $(docker auth print-token registry-1.docker.io)" \
+            https://registry-1.docker.io/v2/_catalog | jq .
 
       # 4. 生成镜像标签（规范化版本管理）
       - name: Generate image tags
