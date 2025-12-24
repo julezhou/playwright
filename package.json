@@ -1,0 +1,9 @@
+{
+  "name": "render-service",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "express": "^4.19.2",
+    "playwright": "1.43.0"
+  }
+}
