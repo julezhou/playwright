@@ -73,7 +73,7 @@ app.post("/render/pdf", async (req, res) => {
 		console.log("PDF生成中");
         await page.setContent(html, { 
 			waitUntil: "networkidle", 
-			timeout: 3000 
+			timeout: 6000 
 		});
         const pdf = await page.pdf({ 
 			format: "A4",
@@ -116,7 +116,7 @@ app.post("/render/png", async (req, res) => {
 		console.log("PNG生成中");
         await page.setContent(html, { 
 			waitUntil: "networkidle",
-			timeout: 3000
+			timeout: 6000
 		});
         const image = await page.screenshot({ 
 			fullPage: true,
